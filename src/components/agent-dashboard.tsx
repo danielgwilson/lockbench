@@ -1,13 +1,30 @@
+/**
+ * AgentDashboard - Full interactive dashboard with game engine integration.
+ *
+ * STATUS: Reference component - not currently used in the main UI.
+ *
+ * This component contains valuable patterns for:
+ * - Connecting to AI via server actions (generateAgentMove)
+ * - Auto-play loop for AI agents
+ * - GameEngine state management
+ * - Tool suggestion autocomplete
+ *
+ * When adding actual game logic to GameCard, reference this component
+ * for patterns on wiring up the GameEngine and AI integration.
+ *
+ * For the current visual-only GameCard component, see game-card.tsx
+ */
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { GameEngine, GameState, Tool } from "@/lib/game-engine";
-import { PixelLock } from "@/components/pixel-lock";
-import { DependencyGraph } from "@/components/dependency-graph";
-import { ContextWindow } from "@/components/context-window";
-import { Check, Play, Pause } from "lucide-react";
+import { Pause, Play } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import { generateAgentMove } from "@/app/actions/agent";
+import { ContextWindow } from "@/components/context-window";
+import { DependencyGraph } from "@/components/dependency-graph";
+import { PixelLock } from "@/components/pixel-lock";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GameEngine, type GameState, type Tool } from "@/lib/game-engine";
 
 interface AgentDashboardProps {
   name: string;
@@ -35,7 +52,7 @@ export function AgentDashboard({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [gameState.history]);
+  }, []);
 
   // Auto-Play Loop
   useEffect(() => {
@@ -164,142 +181,142 @@ export function AgentDashboard({
     <div className="flex flex-col h-full bg-[#1a1a1a] relative p-2">
       {/* Main Outer Card - Solid Border, Rounded, Padding */}
       <Card className="w-full h-full border-2 border-[#444] bg-[#111] relative shadow-2xl flex flex-col p-2 rounded-2xl overflow-hidden">
-         <CardHeader className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#1a1a1a] px-6 py-1 z-10 flex flex-row items-center gap-2 border-2 border-[#444] rounded-full h-10 shadow-lg">
-            <CardTitle className="text-[#e5e5e5] font-serif text-xl font-normal flex items-center gap-2">
-                {name}
-                <button 
-                    onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-                    className={`ml-1 p-0.5 rounded-full border ${isAutoPlaying ? 'border-green-500 text-green-500' : 'border-[#444] text-[#444] hover:text-[#888]'}`}
-                    title={isAutoPlaying ? "Pause Auto-Play" : "Start Auto-Play"}
-                >
-                    {isAutoPlaying ? <Pause size={10} /> : <Play size={10} />}
-                </button>
-            </CardTitle>
-         </CardHeader>
-         
-         <CardContent className="flex flex-col h-full gap-6 p-6 pt-12">
-        {/* Top Half: Split 50/50 */}
-        <div className="flex h-[45%] gap-4">
-          {/* Left Quadrant: Pixel Art */}
-          <div
-            className="w-1/2 dashed-border relative flex items-center justify-center bg-[#222]/20 cursor-pointer rounded-xl border-2 border-dashed border-[#555]"
-            onClick={() =>
-              setViewMode((prev) => (prev === "avatar" ? "lock" : "avatar"))
-            }
-          >
-            {/* Header for Left Panel */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a1a1a] px-2 text-[#e5e5e5] font-mono text-sm whitespace-nowrap">
-              {viewMode === "avatar"
-                ? name
-                : `${activeLock.name} (${solvedCount + 1}/${totalLocks})`}
-            </div>
-
-            {/* Grid Background */}
-            <div className="absolute inset-2 grid grid-cols-16 grid-rows-16 border border-[#333] opacity-20 pointer-events-none"></div>
-
-            <div className="relative z-10">
-              {viewMode === "avatar" ? (
-                <PixelLock
-                  type="avatar"
-                  className="scale-[3.0]"
-                  color="#ff8c69"
-                  showGrid={false}
-                />
-              ) : (
-                <PixelLock
-                  type={activeLockId}
-                  className="scale-[1.5]"
-                  showGrid={true}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Right Quadrant: Graph */}
-          <div className="w-1/2 dashed-border relative flex items-center justify-center rounded-xl border-2 border-dashed border-[#555]">
-            <div className="absolute -top-3 right-4 bg-[#1a1a1a] px-2 text-[#ff8c69] font-mono text-sm">
-              Puzzle Room Challenge
-            </div>
-            <div className="scale-90 w-full flex justify-center">
-              <DependencyGraph locks={gameState.locks} />
-            </div>
-          </div>
-        </div>
-
-         {/* Middle Section: Context Window */}
-         <div className="dashed-border p-4 relative h-[15%] flex flex-col justify-center rounded-xl bg-[#1a1a1a]/50 border-2 border-dashed border-[#555]">
-           <ContextWindow historyLength={gameState.history.length} />
-         </div>
-
-        {/* Bottom Section: Terminal */}
-        <div className="flex-1 bg-[#0a0a0a] p-4 font-mono text-xs flex flex-col min-h-0 rounded-xl dashed-border shadow-inner border-2 border-dashed border-[#555]">
-          <div
-            className="flex-1 overflow-y-auto mb-2 space-y-1"
-            ref={scrollRef}
-          >
-            <div className="text-[#888] mb-4 space-y-1">
-              <p>
-                ⚠ IMPORTANT: When you call tools, their results appear
-                immediately in the conversation.
-              </p>
-              <p>
-                - Tool results like "Wheel 1 shows: 233" are directly visible to
-                you
-              </p>
-              <p>
-                - You DON'T need to print() tool results to see them - they're
-                already in the conversation!
-              </p>
-            </div>
-
-            {gameState.history.map((line, i) => {
-              if (line.includes("Welcome to the Puzzle Room")) return null;
-              return (
-                <div
-                  key={i}
-                  className={`whitespace-pre-wrap ${line.startsWith(">") ? "text-[#888] mt-2" : "text-[#e5e5e5]"}`}
-                >
-                  {line}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="relative shrink-0">
-            {suggestions.length > 0 && (
-              <div className="absolute bottom-full left-0 mb-1 bg-[#222] border border-[#444] w-full max-h-32 overflow-y-auto z-10">
-                {suggestions.map((s) => (
-                  <button
-                    key={s.name}
-                    onClick={() => {
-                      setInput(s.name + " ");
-                      setSuggestions([]);
-                      inputRef.current?.focus();
-                    }}
-                    className="block w-full text-left px-2 py-1 hover:bg-[#333] text-[#ccc]"
-                  >
-                    <span className="text-[#ff8c69]">{s.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            <form
-              onSubmit={handleCommand}
-              className="flex gap-2 items-center border-t border-[#333] pt-1"
+        <CardHeader className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#1a1a1a] px-6 py-1 z-10 flex flex-row items-center gap-2 border-2 border-[#444] rounded-full h-10 shadow-lg">
+          <CardTitle className="text-[#e5e5e5] font-serif text-xl font-normal flex items-center gap-2">
+            {name}
+            <button
+              onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+              className={`ml-1 p-0.5 rounded-full border ${isAutoPlaying ? "border-green-500 text-green-500" : "border-[#444] text-[#444] hover:text-[#888]"}`}
+              title={isAutoPlaying ? "Pause Auto-Play" : "Start Auto-Play"}
             >
-              <span className="text-[#555]">{">"}</span>
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={handleInputChange}
-                className="flex-1 bg-transparent border-none outline-none text-[#e5e5e5] placeholder-[#444]"
-                placeholder="Enter command..."
-              />
-            </form>
+              {isAutoPlaying ? <Pause size={10} /> : <Play size={10} />}
+            </button>
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="flex flex-col h-full gap-6 p-6 pt-12">
+          {/* Top Half: Split 50/50 */}
+          <div className="flex h-[45%] gap-4">
+            {/* Left Quadrant: Pixel Art */}
+            <div
+              className="w-1/2 dashed-border relative flex items-center justify-center bg-[#222]/20 cursor-pointer rounded-xl border-2 border-dashed border-[#555]"
+              onClick={() =>
+                setViewMode((prev) => (prev === "avatar" ? "lock" : "avatar"))
+              }
+            >
+              {/* Header for Left Panel */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a1a1a] px-2 text-[#e5e5e5] font-mono text-sm whitespace-nowrap">
+                {viewMode === "avatar"
+                  ? name
+                  : `${activeLock.name} (${solvedCount + 1}/${totalLocks})`}
+              </div>
+
+              {/* Grid Background */}
+              <div className="absolute inset-2 grid grid-cols-16 grid-rows-16 border border-[#333] opacity-20 pointer-events-none"></div>
+
+              <div className="relative z-10">
+                {viewMode === "avatar" ? (
+                  <PixelLock
+                    type="avatar"
+                    className="scale-[3.0]"
+                    color="#ff8c69"
+                    showGrid={false}
+                  />
+                ) : (
+                  <PixelLock
+                    type={activeLockId}
+                    className="scale-[1.5]"
+                    showGrid={true}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Right Quadrant: Graph */}
+            <div className="w-1/2 dashed-border relative flex items-center justify-center rounded-xl border-2 border-dashed border-[#555]">
+              <div className="absolute -top-3 right-4 bg-[#1a1a1a] px-2 text-[#ff8c69] font-mono text-sm">
+                Puzzle Room Challenge
+              </div>
+              <div className="scale-90 w-full flex justify-center">
+                <DependencyGraph locks={gameState.locks} />
+              </div>
+            </div>
           </div>
-        </div>
-         </CardContent>
+
+          {/* Middle Section: Context Window */}
+          <div className="dashed-border p-4 relative h-[15%] flex flex-col justify-center rounded-xl bg-[#1a1a1a]/50 border-2 border-dashed border-[#555]">
+            <ContextWindow historyLength={gameState.history.length} />
+          </div>
+
+          {/* Bottom Section: Terminal */}
+          <div className="flex-1 bg-[#0a0a0a] p-4 font-mono text-xs flex flex-col min-h-0 rounded-xl dashed-border shadow-inner border-2 border-dashed border-[#555]">
+            <div
+              className="flex-1 overflow-y-auto mb-2 space-y-1"
+              ref={scrollRef}
+            >
+              <div className="text-[#888] mb-4 space-y-1">
+                <p>
+                  ⚠ IMPORTANT: When you call tools, their results appear
+                  immediately in the conversation.
+                </p>
+                <p>
+                  - Tool results like "Wheel 1 shows: 233" are directly visible
+                  to you
+                </p>
+                <p>
+                  - You DON'T need to print() tool results to see them - they're
+                  already in the conversation!
+                </p>
+              </div>
+
+              {gameState.history.map((line, i) => {
+                if (line.includes("Welcome to the Puzzle Room")) return null;
+                return (
+                  <div
+                    key={i}
+                    className={`whitespace-pre-wrap ${line.startsWith(">") ? "text-[#888] mt-2" : "text-[#e5e5e5]"}`}
+                  >
+                    {line}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="relative shrink-0">
+              {suggestions.length > 0 && (
+                <div className="absolute bottom-full left-0 mb-1 bg-[#222] border border-[#444] w-full max-h-32 overflow-y-auto z-10">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s.name}
+                      onClick={() => {
+                        setInput(`${s.name} `);
+                        setSuggestions([]);
+                        inputRef.current?.focus();
+                      }}
+                      className="block w-full text-left px-2 py-1 hover:bg-[#333] text-[#ccc]"
+                    >
+                      <span className="text-[#ff8c69]">{s.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <form
+                onSubmit={handleCommand}
+                className="flex gap-2 items-center border-t border-[#333] pt-1"
+              >
+                <span className="text-[#555]">{">"}</span>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={handleInputChange}
+                  className="flex-1 bg-transparent border-none outline-none text-[#e5e5e5] placeholder-[#444]"
+                  placeholder="Enter command..."
+                />
+              </form>
+            </div>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

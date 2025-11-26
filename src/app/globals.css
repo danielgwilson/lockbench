@@ -1,13 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --background: #131313;
   --foreground: #e5e5e5;
-  --accent-orange: #D98368;
+  --accent-orange: #d98368;
   --accent-green: #4caf50;
-  --border-dashed: #D98368;
+  --border-dashed: #d98368;
   --pixel-off: #333;
   --pixel-on: #e5e5e5;
 }

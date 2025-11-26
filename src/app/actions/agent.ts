@@ -1,8 +1,8 @@
 "use server";
 
-import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
 
 const SYSTEM_PROMPT = `
 PUZZLE ROOM CHALLENGE! You've inherited a mysterious vault from your eccentric locksmith ancestor. The vault contains a series of mathematically-encoded locks that guard each other.

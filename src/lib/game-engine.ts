@@ -1,3 +1,17 @@
+/**
+ * GameEngine - Core game logic for the puzzle room challenge.
+ *
+ * Contains lock definitions, tool system, and state management.
+ * Use with GameCard component for visualization.
+ *
+ * @example
+ * const engine = new GameEngine();
+ * engine.executeTool("victorian_inspect_wheels", []);
+ * const lines = gameHistoryToConsoleLines(engine.state.history);
+ */
+
+import type { ConsoleLine } from "@/components/console-output";
+
 export type ToolCallback = (args: string[]) => string;
 
 export interface Tool {
@@ -176,7 +190,7 @@ export class GameEngine {
           !this.state.inventory.includes("Bell")
         ) {
           this.state.inventory.push("Bell");
-          return result + "\n[LOOT DROP] You obtained: Bell (Value: 773)";
+          return `${result}\n[LOOT DROP] You obtained: Bell (Value: 773)`;
         }
         return result;
       },
@@ -311,4 +325,48 @@ export class GameEngine {
     this.state.history.push(result);
     return result;
   }
+}
+
+/**
+ * Convert game history strings to typed ConsoleLine objects for display.
+ * Automatically detects line types based on content patterns.
+ */
+export function gameHistoryToConsoleLines(history: string[]): ConsoleLine[] {
+  return history.map((line) => {
+    // Tool call: starts with >
+    if (line.startsWith(">")) {
+      return { type: "tool-call", content: line.slice(2) };
+    }
+    // Success messages
+    if (line.includes("SUCCESS") || line.includes("unlocks")) {
+      return { type: "success", content: line };
+    }
+    // Error/failure messages
+    if (line.includes("Error:") || line.includes("FAILURE")) {
+      return { type: "error", content: line };
+    }
+    // Loot/inventory
+    if (line.includes("[LOOT DROP]")) {
+      return { type: "success", content: line };
+    }
+    // Default text
+    return { type: "text", content: line };
+  });
+}
+
+/**
+ * Calculate context window usage based on history.
+ * Returns percentage (0-100) and estimated token count.
+ */
+export function calculateContextUsage(history: string[]): {
+  percentage: number;
+  tokens: number;
+} {
+  // Rough estimate: ~4 chars per token
+  const totalChars = history.join("\n").length;
+  const estimatedTokens = Math.ceil(totalChars / 4);
+  const maxTokens = 200000; // 200k context window
+  const percentage = Math.min((estimatedTokens / maxTokens) * 100, 100);
+
+  return { percentage, tokens: estimatedTokens };
 }

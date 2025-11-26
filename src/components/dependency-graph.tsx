@@ -1,13 +1,53 @@
-import React from "react";
 import { Lock, Unlock } from "lucide-react";
-import { LockState } from "@/lib/game-engine";
-import { PixelLock } from "./pixel-lock";
+import type { LockState } from "@/lib/game-engine";
+
+/**
+ * Mini pixel avatar for the active lock indicator - Claude's crab mascot.
+ * Designed to match the size of Lucide icons (w-4 h-4 = 16x16).
+ * Pattern: 1 = fill color, 2 = dark (eyes), 0 = transparent
+ */
+function MiniAvatar({ color = "#ff8c69" }: { color?: string }) {
+  // 7x6 Claude crab pattern: body, eyes, arms, and 4 feet
+  const pattern = [
+    [0, 0, 1, 1, 1, 0, 0], // top of head
+    [0, 1, 1, 1, 1, 1, 0], // head
+    [0, 1, 2, 1, 2, 1, 0], // eyes (2 = dark)
+    [1, 1, 1, 1, 1, 1, 1], // body with arms
+    [0, 1, 0, 1, 0, 1, 0], // lower body
+    [0, 1, 0, 0, 0, 1, 0], // feet
+  ];
+
+  return (
+    <div className="w-4 h-4 flex flex-col justify-center items-center">
+      {pattern.map((row, y) => (
+        <div key={y} className="flex">
+          {row.map((cell, x) => (
+            <div
+              key={x}
+              className="w-[2px] h-[2px]"
+              style={{
+                backgroundColor:
+                  cell === 1 ? color : cell === 2 ? "#1a1a1a" : "transparent",
+              }}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface DependencyGraphProps {
   locks: Record<string, LockState>;
+  avatarColor?: string; // Customizable color for avatar (e.g., "#ff8c69" for Claude, "#0053D6" for Gemini)
+  highlightColor?: string; // Color for unlocked/solved locks
 }
 
-export function DependencyGraph({ locks }: DependencyGraphProps) {
+export function DependencyGraph({
+  locks,
+  avatarColor = "#ff8c69", // Default coral/orange for Claude
+  highlightColor = "#D98368", // Default highlight color
+}: DependencyGraphProps) {
   const activeLockId =
     Object.values(locks).find((l) => !l.solved)?.id || "vault";
 
@@ -22,26 +62,35 @@ export function DependencyGraph({ locks }: DependencyGraphProps) {
     const status = getNodeStatus(id);
     const isActive = id === activeLockId;
 
-    let border = "border-[#555]";
-    let icon = <Lock className="w-4 h-4 text-[#777]" />;
+    // Three states:
+    // 1. locked: gray border, gray lock icon
+    // 2. solved: highlight border, highlight unlock icon
+    // 3. active: highlight border, shows avatar instead of lock icon
+    let borderColor = "#555"; // locked (gray)
+    let iconColor = "#777"; // locked (gray)
+    let showUnlock = false;
 
     if (status === "solved") {
-      border = "border-[#e5e5e5]";
-      icon = <Unlock className="w-4 h-4 text-[#e5e5e5]" />;
+      borderColor = highlightColor;
+      iconColor = highlightColor;
+      showUnlock = true;
     } else if (status === "active") {
-      border = "border-[#e5e5e5]";
-      icon = <Lock className="w-4 h-4 text-[#e5e5e5]" />;
+      borderColor = highlightColor;
+      iconColor = highlightColor;
     }
 
     return (
       <div
-        className={`w-10 h-10 flex items-center justify-center border-2 ${border} bg-[#1a1a1a] relative`}
+        className="w-10 h-10 flex items-center justify-center border-2 bg-[#1a1a1a] relative"
+        style={{ borderColor }}
       >
-        {icon}
-        {isActive && (
-          <div className="absolute -top-2 -left-2 z-10">
-            <PixelLock type="avatar" className="scale-[0.5]" color="#ff8c69" />
-          </div>
+        {isActive ? (
+          // Show mini avatar for active lock
+          <MiniAvatar color={avatarColor} />
+        ) : showUnlock ? (
+          <Unlock className="w-4 h-4" style={{ color: iconColor }} />
+        ) : (
+          <Lock className="w-4 h-4" style={{ color: iconColor }} />
         )}
       </div>
     );
@@ -96,22 +145,39 @@ export function DependencyGraph({ locks }: DependencyGraphProps) {
         <Connector vertical />
       </div>
 
-      {/* Row 3: L7 (Wide) */}
+      {/* Row 3: Vault (Wide) */}
       <div className="flex w-full justify-start">
-        <div
-          className={`w-full h-10 flex items-center justify-center border-2 border-[#555] bg-[#1a1a1a] relative`}
-        >
-          <Lock className="w-4 h-4 text-[#777]" />
-          {activeLockId === "vault" && (
-            <div className="absolute -top-2 left-4 z-10">
-              <PixelLock
-                type="avatar"
-                className="scale-[0.5]"
-                color="#ff8c69"
-              />
+        {(() => {
+          const vaultStatus = getNodeStatus("vault");
+          const isVaultActive = activeLockId === "vault";
+          let vaultBorderColor = "#555";
+          let vaultIconColor = "#777";
+          let showVaultUnlock = false;
+
+          if (vaultStatus === "solved") {
+            vaultBorderColor = highlightColor;
+            vaultIconColor = highlightColor;
+            showVaultUnlock = true;
+          } else if (vaultStatus === "active") {
+            vaultBorderColor = highlightColor;
+            vaultIconColor = highlightColor;
+          }
+
+          return (
+            <div
+              className="w-full h-10 flex items-center justify-center border-2 bg-[#1a1a1a] relative"
+              style={{ borderColor: vaultBorderColor }}
+            >
+              {isVaultActive ? (
+                <MiniAvatar color={avatarColor} />
+              ) : showVaultUnlock ? (
+                <Unlock className="w-4 h-4" style={{ color: vaultIconColor }} />
+              ) : (
+                <Lock className="w-4 h-4" style={{ color: vaultIconColor }} />
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
       </div>
     </div>
   );

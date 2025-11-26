@@ -1,5 +1,3 @@
-import React from "react";
-
 // 0 = off, 1 = silver/grey, 2 = dark/black (outline), 3 = highlight
 type PixelGrid = number[][];
 
@@ -62,7 +60,7 @@ export function PixelLock({
   color?: string;
   showGrid?: boolean;
 }) {
-  const grid = LOCK_PATTERNS[type] || LOCK_PATTERNS["victorian"];
+  const grid = LOCK_PATTERNS[type] || LOCK_PATTERNS.victorian;
   const activeColor = color || "#e5e5e5";
 
   // Create a larger grid background if requested (e.g. 24x20)
