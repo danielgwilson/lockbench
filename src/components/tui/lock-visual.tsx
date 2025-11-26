@@ -1,0 +1,142 @@
+import React from 'react';
+import { BlockRenderer } from './block-renderer';
+
+// --- DATA ---
+// Palette IDs:
+// 0: BG (Zinc-800)
+// 1: Pale Gray (Zinc-50)
+// 2: Light Gray (Zinc-200)
+// 3: Medium Gray (Zinc-400)
+// 4: Dark Gray (Zinc-600)
+// 5: Black (Zinc-950)
+// 6: White
+
+const LOCK_WIDTH = 36;
+
+// Helper to fill range
+const fill = (count: number, val: number) => Array(count).fill(val);
+
+const LOCK_DATA = {
+  locked: [
+    ...fill(36, 0),
+    ...fill(36, 0),
+
+    ...fill(13, 0), ...fill(2, 5), ...fill(6, 1), ...fill(2, 5), ...fill(13, 0),
+    ...fill(13, 0), ...fill(10, 1), ...fill(13, 0),
+
+    ...fill(12, 0), ...fill(2, 1), ...fill(8, 0), ...fill(2, 1), ...fill(12, 0),
+    ...fill(12, 0), ...fill(2, 1), ...fill(8, 0), ...fill(2, 1), ...fill(12, 0),
+
+    ...fill(8, 0), 5, ...fill(5, 1), ...fill(8, 5), ...fill(5, 1), 5, ...fill(8, 0),
+    ...fill(8, 0), 1, ...fill(18, 1), 1, ...fill(8, 0),
+
+    ...fill(8, 0), 1, 2, 4, 2, 4, 3, 3, ...fill(6, 2), 3, 3, 4, 2, 4, 2, 1, ...fill(8, 0),
+    ...fill(8, 0), 1, 2, 4, 2, 4, 3, 3, ...fill(6, 2), 3, 3, 4, 2, 4, 2, 1, ...fill(8, 0),
+
+    ...fill(9, 0), 1, 2, 4, 3, 3, 3, 3, 2, ...fill(2, 1), 2, 3, 3, 3, 3, 4, 2, 1, ...fill(9, 0),
+    ...fill(9, 0), 1, 2, 4, 3, 3, 3, 3, 2, ...fill(2, 1), 2, 3, 3, 3, 3, 4, 2, 1, ...fill(9, 0),
+
+    ...fill(10, 0), 1, 2, 3, 3, 3, 2, 1, ...fill(2, 4), 1, 2, 3, 3, 3, 2, 1, ...fill(10, 0),
+    ...fill(10, 0), 1, 2, 3, 3, 3, 2, 1, ...fill(2, 4), 1, 2, 3, 3, 3, 2, 1, ...fill(10, 0),
+
+    // -- Row 7 (Second Half)
+    ...fill(10, 0), 1, 2, 3, 3, 3, 2, 1, ...fill(2, 4), 1, 2, 3, 3, 3, 2, 1, ...fill(10, 0),
+    ...fill(10, 0), 1, 2, 3, 3, 3, 2, 1, ...fill(2, 4), 1, 2, 3, 3, 3, 2, 1, ...fill(10, 0),
+
+    ...fill(9, 0), 1, 2, 4, 3, 3, 3, 3, 2, ...fill(2, 1), 2, 3, 3, 3, 3, 4, 2, 1, ...fill(9, 0),
+    ...fill(9, 0), 1, 2, 4, 3, 3, 3, 3, 2, ...fill(2, 1), 2, 3, 3, 3, 3, 4, 2, 1, ...fill(9, 0),
+
+    ...fill(8, 0), 1, 2, 4, 2, 4, 3, 3, ...fill(6, 2), 3, 3, 4, 2, 4, 2, 1, ...fill(8, 0),
+    ...fill(8, 0), 1, 2, 4, 2, 4, 3, 3, ...fill(6, 2), 3, 3, 4, 2, 4, 2, 1, ...fill(8, 0),
+
+    ...fill(8, 0), ...fill(20, 1), ...fill(8, 0),
+    ...fill(8, 0), 5, ...fill(18, 1), 5, ...fill(8, 0),
+
+    ...fill(36, 0),
+    ...fill(36, 0),
+  ],
+  unlocked: [
+    ...fill(13, 0), ...fill(2, 5), ...fill(6, 1), ...fill(2, 5), ...fill(13, 0),
+    ...fill(13, 0), ...fill(10, 1), ...fill(13, 0),
+
+    ...fill(12, 0), ...fill(2, 1), ...fill(8, 0), ...fill(2, 1), ...fill(12, 0),
+    ...fill(12, 0), ...fill(2, 1), ...fill(8, 0), ...fill(2, 1), ...fill(12, 0),
+
+    ...fill(12, 0), ...fill(2, 1), ...fill(8, 0), ...fill(2, 0), ...fill(12, 0),
+    ...fill(12, 0), ...fill(2, 1), ...fill(8, 0), ...fill(2, 0), ...fill(12, 0),
+
+    ...fill(8, 0), 5, ...fill(5, 1), ...fill(8, 5), ...fill(5, 1), 5, ...fill(8, 0),
+    ...fill(8, 0), 1, ...fill(18, 1), 1, ...fill(8, 0),
+
+    ...fill(8, 0), 1, 2, 4, 2, 4, 3, 3, ...fill(6, 2), 3, 3, 4, 2, 4, 2, 1, ...fill(8, 0),
+    ...fill(8, 0), 1, 2, 4, 2, 4, 3, 3, ...fill(6, 2), 3, 3, 4, 2, 4, 2, 1, ...fill(8, 0),
+
+    ...fill(9, 0), 1, 2, 4, 3, 3, 3, 3, 2, ...fill(2, 1), 2, 3, 3, 3, 3, 4, 2, 1, ...fill(9, 0),
+    ...fill(9, 0), 1, 2, 4, 3, 3, 3, 3, 2, ...fill(2, 1), 2, 3, 3, 3, 3, 4, 2, 1, ...fill(9, 0),
+
+    ...fill(10, 0), 1, 2, 3, 3, 3, 2, 1, ...fill(2, 4), 1, 2, 3, 3, 3, 2, 1, ...fill(10, 0),
+    ...fill(10, 0), 1, 2, 3, 3, 3, 2, 1, ...fill(2, 4), 1, 2, 3, 3, 3, 2, 1, ...fill(10, 0),
+
+    // -- Row 7 (Second Half)
+    ...fill(10, 0), 1, 2, 3, 3, 3, 2, 1, ...fill(2, 4), 1, 2, 3, 3, 3, 2, 1, ...fill(10, 0),
+    ...fill(10, 0), 1, 2, 3, 3, 3, 2, 1, ...fill(2, 4), 1, 2, 3, 3, 3, 2, 1, ...fill(10, 0),
+
+    ...fill(9, 0), 1, 2, 4, 3, 3, 3, 3, 2, ...fill(2, 1), 2, 3, 3, 3, 3, 4, 2, 1, ...fill(9, 0),
+    ...fill(9, 0), 1, 2, 4, 3, 3, 3, 3, 2, ...fill(2, 1), 2, 3, 3, 3, 3, 4, 2, 1, ...fill(9, 0),
+
+    ...fill(8, 0), 1, 2, 4, 2, 4, 3, 3, ...fill(6, 2), 3, 3, 4, 2, 4, 2, 1, ...fill(8, 0),
+    ...fill(8, 0), 1, 2, 4, 2, 4, 3, 3, ...fill(6, 2), 3, 3, 4, 2, 4, 2, 1, ...fill(8, 0),
+
+    ...fill(8, 0), ...fill(20, 1), ...fill(8, 0),
+    ...fill(8, 0), 5, ...fill(18, 1), 5, ...fill(8, 0),
+
+    ...fill(36, 0),
+    ...fill(36, 0),
+  ]
+}
+
+export interface LockVisualProps {
+  isLocked?: boolean;
+  fraction?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export const LockVisual = ({ 
+  isLocked = true, 
+  fraction = 1,
+  className,
+  style 
+}: LockVisualProps) => {
+  return (
+    <div 
+      className={className}
+      style={{ 
+        ...style,
+        width: `${fraction * 100}%`,
+        // Original styles
+        background: '#21211E', // Zinc-900
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      <span style={{
+        color: '#CBCAC4',
+        backgroundColor: '#21211E',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        marginBottom: '0px',
+        fontFamily: '"Fira Code", monospace',
+        position: 'relative',
+        top: '-2px',
+        zIndex: 10,
+        textAlign: 'center'
+      }}>
+        Victorian lock opened!
+      </span>
+      <BlockRenderer grid={isLocked ? LOCK_DATA.locked : LOCK_DATA.unlocked} width={LOCK_WIDTH} />
+    </div>
+  );
+};
